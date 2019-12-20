@@ -39,19 +39,11 @@ To build and run iOS apps:
     $ cd mediapipe
     ```
 
-2.  Install Bazel (0.24.1 and above required).
+2.  Install Bazel (version between 0.24.1 and 1.2.1).
 
-    Option 1. Use package manager tool to install the latest version of Bazel.
-
-    ```bash
-    $ sudo apt-get install bazel
-
-    # Run 'bazel version' to check version of bazel installed
-    ```
-
-    Option 2. Follow the official
-    [Bazel documentation](https://docs.bazel.build/versions/master/install-ubuntu.html)
-    to install any version of Bazel manually.
+    Follow the official
+    [documentation](https://docs.bazel.build/versions/master/install-ubuntu.html)
+    to install Bazel manually. Note that MediaPipe doesn't support Bazel 2.0.0+ yet.
 
 3.  Install OpenCV and FFmpeg.
 
@@ -158,11 +150,11 @@ To build and run iOS apps:
     $ cd mediapipe
     ```
 
-2.  Install Bazel (0.24.1 and above required).
+2.  Install Bazel (version between 0.24.1 and 1.2.1).
 
     Follow the official
-    [Bazel documentation](https://docs.bazel.build/versions/master/install-redhat.html)
-    to install Bazel manually.
+    [documentation](https://docs.bazel.build/versions/master/install-redhat.html)
+    to install Bazel manually. Note that MediaPipe doesn't support Bazel 2.0.0+ yet.
 
 3.  Install OpenCV.
 
@@ -383,7 +375,7 @@ To build and run iOS apps:
     username@DESKTOP-TMVLBJ1:~$ sudo apt-get update && sudo apt-get install -y build-essential git python zip adb openjdk-8-jdk
     ```
 
-5.  Install Bazel (0.24.1 and above required).
+5.  Install Bazel (version between 0.24.1 and 1.2.1).
 
     ```bash
     username@DESKTOP-TMVLBJ1:~$ curl -sLO --retry 5 --retry-max-time 10 \
