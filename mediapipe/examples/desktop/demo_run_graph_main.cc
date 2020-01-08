@@ -43,61 +43,64 @@ DEFINE_string(output_video_path, "",
   std::string calculator_graph_config_contents;
   MP_RETURN_IF_ERROR(mediapipe::file::GetContents(
       FLAGS_calculator_graph_config_file, &calculator_graph_config_contents));
-  LOG(INFO) << "Get calculator graph config contents: "
-            << calculator_graph_config_contents;
+  //LOG(INFO) << "Get calculator graph config contents: "<< calculator_graph_config_contents;
   mediapipe::CalculatorGraphConfig config =
       mediapipe::ParseTextProtoOrDie<mediapipe::CalculatorGraphConfig>(
           calculator_graph_config_contents);
 
-  LOG(INFO) << "Initialize the calculator graph.";
+  //LOG(INFO) << "Initialize the calculator graph.";
   mediapipe::CalculatorGraph graph;
   MP_RETURN_IF_ERROR(graph.Initialize(config));
 
-  LOG(INFO) << "Initialize the camera or load the video.";
+  //LOG(INFO) << "Initialize the camera or load the video.";
   cv::VideoCapture capture;
   const bool load_video = !FLAGS_input_video_path.empty();
   if (load_video) {
-    capture.open(FLAGS_input_video_path);
+      capture.open(FLAGS_input_video_path);
+      LOG(INFO) << "Load video is true";
   } else {
-    capture.open(0);
+    capture.open(2);
   }
   RET_CHECK(capture.isOpened());
 
   cv::VideoWriter writer;
+  capture.set(cv::CAP_PROP_FOURCC,cv::VideoWriter::fourcc('M','J','P','G'));
   const bool save_video = !FLAGS_output_video_path.empty();
   if (save_video) {
-    LOG(INFO) << "Prepare video writer.";
+   // LOG(INFO) << "Prepare video writer.";
     cv::Mat test_frame;
-    capture.read(test_frame);                    // Consume first frame.
-    capture.set(cv::CAP_PROP_POS_AVI_RATIO, 0);  // Rewind to beginning.
+    //capture.read(test_frame);                    // Consume first frame.
+    // capture.set(cv::CAP_PROP_POS_AVI_RATIO, 0);  // Rewind to beginning.
     writer.open(FLAGS_output_video_path,
                 mediapipe::fourcc('a', 'v', 'c', '1'),  // .mp4
                 capture.get(cv::CAP_PROP_FPS), test_frame.size());
     RET_CHECK(writer.isOpened());
   } else {
     cv::namedWindow(kWindowName, /*flags=WINDOW_AUTOSIZE*/ 1);
-#if (CV_MAJOR_VERSION >= 3) && (CV_MINOR_VERSION >= 2)
-    capture.set(cv::CAP_PROP_FRAME_WIDTH, 640);
-    capture.set(cv::CAP_PROP_FRAME_HEIGHT, 480);
-    capture.set(cv::CAP_PROP_FPS, 30);
-#endif
+    //#if (CV_MAJOR_VERSION >= 3) && (CV_MINOR_VERSION >= 2)
+    capture.set(cv::CAP_PROP_FRAME_WIDTH, 1152);
+    capture.set(cv::CAP_PROP_FRAME_HEIGHT, 768);
+    capture.set(cv::CAP_PROP_FPS, 100);
+    //#endif
   }
 
-  LOG(INFO) << "Start running the calculator graph.";
+ // LOG(INFO) << "Start running the calculator graph.";
   ASSIGN_OR_RETURN(mediapipe::OutputStreamPoller poller,
                    graph.AddOutputStreamPoller(kOutputStream));
   MP_RETURN_IF_ERROR(graph.StartRun({}));
 
-  LOG(INFO) << "Start grabbing and processing frames.";
-  size_t frame_timestamp = 0;
+  //LOG(INFO) << "Start grabbing and processing frames.";
+  size_t frame_timestamp_us = 0;
   bool grab_frames = true;
   while (grab_frames) {
     // Capture opencv camera or video frame.
     cv::Mat camera_frame_raw;
     capture >> camera_frame_raw;
+    //LOG(INFO) << "Is camera_frame_raw empty?"<<camera_frame_raw.empty();
     if (camera_frame_raw.empty()) break;  // End of video.
     cv::Mat camera_frame;
     cv::cvtColor(camera_frame_raw, camera_frame, cv::COLOR_BGR2RGB);
+    //LOG(INFO) << "Is load_video true? "<<load_video;
     if (!load_video) {
       cv::flip(camera_frame, camera_frame, /*flipcode=HORIZONTAL*/ 1);
     }
@@ -112,12 +115,20 @@ DEFINE_string(output_video_path, "",
     // Send image packet into the graph.
     MP_RETURN_IF_ERROR(graph.AddPacketToInputStream(
         kInputStream, mediapipe::Adopt(input_frame.release())
-                          .At(mediapipe::Timestamp(frame_timestamp++))));
+                          .At(mediapipe::Timestamp(frame_timestamp_us += 10000))));
+    
+    //frame_timestamp++;
 
+    
     // Get the graph result packet, or stop if that fails.
-    mediapipe::Packet packet;
+
+        mediapipe::Packet packet;
+   
     if (!poller.Next(&packet)) break;
+    
     auto& output_frame = packet.Get<mediapipe::ImageFrame>();
+  
+    //  LOG(INFO) << "Get the graph result packet,end";
 
     // Convert back to opencv for display or saving.
     cv::Mat output_frame_mat = mediapipe::formats::MatView(&output_frame);
